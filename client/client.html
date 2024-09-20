@@ -1,13 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <title>Our simple HTTP server</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
-  
-  <script>
 
+  <script>
+    const handleResponse = async(response) => {
+      if(response.type === 'application/json' && response.page === '/success'){
+        console.log("GREAT SUCCESS");
+      }
+      else{
+        console.log("FAILRE")
+      }
+    };
+
+
+    const sendRequest = async() => {
+      const page = document.getElementById('page').value;
+      const type = document.getElementById('type').value;
+
+      const options = {
+        method: 'GET',
+        headers: {
+          'Accept': type,
+        }
+      };
+
+      try{
+        const response = await fetch(page, options);
+        handleResponse(response);
+      }catch (err){
+        console.log(err);
+      }
+    };
+
+    const init = () => {
+      const sendBtn = document.getElementById('send');
+      sendBtn.addEventListener('click', sendRequest);
+    }
+
+    window.onload = init;
   </script>
 </head>
+
 <body>
   <section id="top">
     <h3>Status Code Tests</h3>
@@ -27,6 +63,8 @@
     <button id="send">Send</button>
   </section>
   <section id="content">
+
   </section>
 </body>
+
 </html>
