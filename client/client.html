@@ -6,41 +6,94 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
 
   <script>
-    const handleResponse = async(response) => {
-      if(response.type === 'application/json' && response.page === '/success'){
-        console.log("GREAT SUCCESS");
+    const handleResponse = async (response) => {
+      const contentType = response.headers.get('Content-Type');
+      const content = document.getElementById('content');
+
+      const rawData = await response.text(); 
+      console.log(rawData); 
+      try {
+        switch (response.status) {
+          case 200:
+            content.innerHTML = `<b>Success!</b>`;
+            break;
+          case 400:
+            content.innerHTML = `<b>Bad Request</b>`;
+            break;
+          case 401:
+            content.innerHTML = `<b>Unauthorized</b>`;
+            break;
+          case 403:
+            content.innerHTML = `<b>Forbidden</b>`;
+            break;
+          case 500:
+            content.innerHTML = `<b>Internal Server Error</b>`;
+            break;
+          case 501:
+            content.innerHTML = `<b>Not Implemented</b>`;
+            break;
+          case 404:
+            content.innerHTML = `<b>Resource Not Found</b>`;
+            break;
+        }
+
+
+        let message;
+
+        if (contentType.includes('application/json')) {
+          const jsonResponse = JSON.parse(rawData);
+          message = `<p><b>Message:</b> ${jsonResponse.message}</p>`;
+        } 
+        else if (contentType.includes('text/xml')) 
+        {
+          const parser = new DOMParser();
+          const xmlDoc = parser.parseFromString(rawData, 'application/xml');
+          const messageTag = xmlDoc.getElementsByTagName('message')[0].textContent;
+          const idTag = xmlDoc.getElementsByTagName('id')[0]?.textContent;
+          message = `<p><b>Message:</b> ${messageTag}</p>`;
+        } 
+        else 
+        {
+          message = `<h1>${page}</h1><p>Unexpected content type: ${contentType}</p>`;
+        }
+
+        content.innerHTML += `<p>${message}</p>`;
+
       }
-      else{
-        console.log("FAILRE")
+      catch (err) 
+      {
+        console.log(err);
       }
+
+
+
     };
 
+    const sendFetch = async () => {
+      const page = document.getElementById('page').value;  
+      const type = document.getElementById('type').value;  
 
-    const sendRequest = async() => {
-      const page = document.getElementById('page').value;
-      const type = document.getElementById('type').value;
+      try {
+        const response = await fetch(page, {
+          headers: {
+            'Accept': type,  
+          },
+        });
 
-      const options = {
-        method: 'GET',
-        headers: {
-          'Accept': type,
-        }
-      };
-
-      try{
-        const response = await fetch(page, options);
-        handleResponse(response);
-      }catch (err){
-        console.log(err);
+        handleResponse(response, page);
+      } 
+      catch (error) 
+      {
+        console.error('Fetch error:', error);
       }
     };
 
     const init = () => {
       const sendBtn = document.getElementById('send');
-      sendBtn.addEventListener('click', sendRequest);
-    }
+      sendBtn.addEventListener('click', sendFetch); 
+    };
 
-    window.onload = init;
+    window.onload = init;  
   </script>
 </head>
 
